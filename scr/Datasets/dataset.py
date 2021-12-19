@@ -8,6 +8,7 @@ from typing import Tuple, Dict, Optional, List, Union
 
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
+from dataclasses import dataclass
 
 
 

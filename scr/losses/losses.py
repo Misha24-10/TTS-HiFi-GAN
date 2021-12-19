@@ -11,23 +11,23 @@ def feature_matching_loss(fmap_r, fmap_g):
 
 def discriminator_loss(disc_real_outputs, disc_generated_outputs):
     loss = 0
-    r_losses = []
-    g_losses = []
+    real_losses = []
+    gen_losses = []
     for dr, dg in zip(disc_real_outputs, disc_generated_outputs):
-        r_loss = torch.mean((1-dr)**2)
-        g_loss = torch.mean(dg**2)
-        loss += (r_loss + g_loss)
-        r_losses.append(r_loss.item())
-        g_losses.append(g_loss.item())
+        real_loss = torch.mean((1 - dr) ** 2)
+        gen_loss = torch.mean(dg ** 2)
+        loss += (real_loss + gen_loss)
+        real_losses.append(real_loss.item())
+        gen_losses.append(gen_loss.item())
 
-    return loss, r_losses, g_losses
+    return loss, real_losses, gen_losses
 
 
 def generator_loss(disc_outputs):
     loss_value = 0
     gen_losses = []
     for dg in disc_outputs:
-        l = torch.mean((1-dg)**2)
+        l = torch.mean((1 - dg) ** 2)
         gen_losses.append(l)
         loss_value += l
 

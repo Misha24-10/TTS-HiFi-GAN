@@ -1,6 +1,6 @@
 from scr.Datasets.dataset import LJSpeechDataset, LJSpeechCollator, LJSpeechDataset_fullaudio
 from config import MelSpectrogramConfig, MelSpectrogramConfig_loss, device, path_generator, path_mpd, \
-    path_msd
+    path_msd, path_gen_checkpoint, path_mpd_checkpoint, path_msd_checkpoint
 import torch
 from scr.Melspec.melspec import MelSpectrogram, MelSpectrogramConfig_loss, MelSpectrogramConfig
 from torch.utils.data import  Subset
@@ -9,7 +9,6 @@ import wandb
 from scr.Model.model import MSD, Generator, MPD
 import itertools
 from itertools import islice
-
 from tqdm import tqdm
 from IPython import display
 import torch.nn.functional as F
@@ -130,9 +129,9 @@ def train():
             wandb.log({"Mel-Spectrogram Loss in VALIDATION": val_err})
             print("Mel-Spectrogram Loss in VALIDATION", val_err)
         generator.train()
-        torch.save(generator.state_dict(), f'/content/drive/MyDrive/AUDIO_DLA/TTS GAN/log/generator_try4{epoch}.pt')
-        torch.save(mpd.state_dict(), f'/content/drive/MyDrive/AUDIO_DLA/TTS GAN/log/mpd_try4{epoch}.pt')
-        torch.save(msd.state_dict(), f'/content/drive/MyDrive/AUDIO_DLA/TTS GAN/log/msd_try4{epoch}.pt')
+        torch.save(generator.state_dict(), f'{path_gen_checkpoint}{epoch}.pt')
+        torch.save(mpd.state_dict(), f'{path_mpd_checkpoint}{epoch}.pt')
+        torch.save(msd.state_dict(), f'{path_msd_checkpoint}{epoch}.pt')
 
 if __name__ == '__main__':
     train()

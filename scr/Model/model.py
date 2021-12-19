@@ -1,6 +1,7 @@
 from torch.nn.utils import weight_norm, spectral_norm
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 class MRF(nn.Module):
     def __init__(self, dim, kernel_size=3, deletions= (1, 3, 5), leaky_relu = 0.1):

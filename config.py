@@ -4,12 +4,17 @@ class config:
     MFT_block_dilations = [ [1, 1], [3, 1], [5, 1] ]
     leaky_relu = 0.1
 
-path_generator = "."
-path_mpd = "."
-path_msd: str = "."
+path_generator = "/content/generator_try44.pt"
+path_mpd = "/content/mpd_try44.pt"
+path_msd: str = "/content/msd_try44.pt"
 
 
-path2predictaudio = "..."
+path2predictaudio = "/content/TTS-HiFi-GAN/audio2predict"
+
+path_gen_checkpoint = "..."
+path_mpd_checkpoint = "..."
+path_msd_checkpoint = "..."
+
 class MelSpectrogramConfig:
     sr: int = 22050
     win_length: int = 1024
