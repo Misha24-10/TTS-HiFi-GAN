@@ -1,13 +1,15 @@
 import torch
 from torch import nn
 
+
 def feature_matching_loss(fmap_r, fmap_g):
     loss_value = 0
     loss = nn.L1Loss(reduction='mean')
     for i in range(len(fmap_r)):
         for x, y in zip(fmap_r[i], fmap_g[i]):
-            loss_value += loss(x,y)
+            loss_value += loss(x, y)
     return loss_value * 2
+
 
 def discriminator_loss(disc_real_outputs, disc_generated_outputs):
     loss = 0

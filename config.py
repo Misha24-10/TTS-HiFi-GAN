@@ -1,19 +1,21 @@
-
 device = "cuda"
+BATCH_SIZE = 16
+DATAPATH = "." # path to LJSPEECH
 class config:
-    MFT_block_dilations = [ [1, 1], [3, 1], [5, 1] ]
+    MFT_block_dilations = [[1, 1], [3, 1], [5, 1]]
     leaky_relu = 0.1
+
 
 path_generator = "/content/generator_try44.pt"
 path_mpd = "/content/mpd_try44.pt"
 path_msd: str = "/content/msd_try44.pt"
-
 
 path2predictaudio = "/content/TTS-HiFi-GAN/audio2predict"
 
 path_gen_checkpoint = "..."
 path_mpd_checkpoint = "..."
 path_msd_checkpoint = "..."
+
 
 class MelSpectrogramConfig:
     sr: int = 22050
@@ -25,6 +27,7 @@ class MelSpectrogramConfig:
     n_mels: int = 80
     power: float = 1.0
     center: bool = False
+
 
 class MelSpectrogramConfig_loss:
     sr: int = 22050

@@ -7,7 +7,7 @@ from config import device, MelSpectrogramConfig, path_generator, path2predictaud
 from IPython import display
 
 
-def audio2audio(generator,melspec, path):
+def audio2audio(generator, melspec, path):
     waveform, sample_rate = torchaudio.load(path)
     mel = melspec(waveform.to(device)).squeeze()
     aud = generator(mel.unsqueeze(0)).squeeze().cpu().detach()
@@ -25,4 +25,4 @@ if __name__ == '__main__':
         if file.endswith(".wav"):
             path = f"{path2predictaudio}/{file}"
             print(path)
-            audio2audio(generator,melspec, path)
+            audio2audio(generator, melspec, path)

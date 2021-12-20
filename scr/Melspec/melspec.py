@@ -19,7 +19,7 @@ class MelSpectrogram(nn.Module):
             f_min=config.f_min,
             f_max=config.f_max,
             n_mels=config.n_mels,
-            center = config.center
+            center=config.center
         )
 
         self.mel_spectrogram.spectrogram.power = config.power
@@ -38,7 +38,9 @@ class MelSpectrogram(nn.Module):
         :param audio: Expected shape is [B, T]
         :return: Shape is [B, n_mels, T']
         """
-        audio = torch.nn.functional.pad(audio.unsqueeze(1), (int((self.config.n_fft-self.config.hop_length)/2), int((self.config.n_fft-self.config.hop_length)/2)), mode='reflect')
+        audio = torch.nn.functional.pad(audio.unsqueeze(1), (
+        int((self.config.n_fft - self.config.hop_length) / 2), int((self.config.n_fft - self.config.hop_length) / 2)),
+                                        mode='reflect')
         mel = self.mel_spectrogram(audio) \
             .clamp_(min=1e-5) \
             .log_()

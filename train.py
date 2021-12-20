@@ -1,9 +1,9 @@
 from scr.Datasets.dataset import LJSpeechDataset, LJSpeechCollator, LJSpeechDataset_fullaudio
 from config import MelSpectrogramConfig, MelSpectrogramConfig_loss, device, path_generator, path_mpd, \
-    path_msd, path_gen_checkpoint, path_mpd_checkpoint, path_msd_checkpoint
+    path_msd, path_gen_checkpoint, path_mpd_checkpoint, path_msd_checkpoint, BATCH_SIZE, DATAPATH
 import torch
 from scr.Melspec.melspec import MelSpectrogram, MelSpectrogramConfig_loss, MelSpectrogramConfig
-from torch.utils.data import  Subset
+from torch.utils.data import Subset
 from torch.utils.data import DataLoader
 import wandb
 from scr.Model.model import MSD, Generator, MPD
@@ -29,15 +29,16 @@ def get_dataloader(datapath='.', batchSize=16):
     train_dataset = Subset(dataset, train_indexes)
     validation_dataset = Subset(dataset, validation_indexes)
 
-    dataloader_train  = DataLoader(train_dataset, batch_size=batchSize, collate_fn= LJSpeechCollator())
+    dataloader_train = DataLoader(train_dataset, batch_size=batchSize, collate_fn=LJSpeechCollator())
     dataloader_valid = DataLoader(validation_dataset, batch_size=batchSize, collate_fn=LJSpeechCollator())
     return dataloader_train, dataloader_valid
 
+
 def train():
     wandb.login(key='358c4114387c5c7ca207c32ba4343e7c86efc182')
-    wandb.init(project='TTS_mel2wav', entity='mishaya') # username in wandb
+    wandb.init(project='TTS_mel2wav', entity='mishaya')  # username in wandb
 
-    dataloader_train, dataloader_valid = get_dataloader()
+    dataloader_train, dataloader_valid = get_dataloader(DATAPATH, BATCH_SIZE)
 
     melspec = MelSpectrogram(MelSpectrogramConfig()).to(device)
     melspec_loss = MelSpectrogram(MelSpectrogramConfig_loss()).to(device)
@@ -57,9 +58,10 @@ def train():
     mpd.train()
     msd.train()
     losses = []
-    dataloader_fullaudo = DataLoader(LJSpeechDataset_fullaudio('.', MelSpectrogramConfig(), MelSpectrogramConfig_loss(), device), batch_size=1 )
+    dataloader_fullaudo = DataLoader(
+        LJSpeechDataset_fullaudio('.', MelSpectrogramConfig(), MelSpectrogramConfig_loss(), device), batch_size=1)
     for epoch in range(100):
-        for i, batch in islice(enumerate(tqdm(dataloader_train)),len(dataloader_train)):
+        for i, batch in islice(enumerate(tqdm(dataloader_train)), len(dataloader_train)):
             y, x, y_mel = batch.waveform, batch.mels, batch.mel_loss
             y = y.unsqueeze(1)
             y_audio_pred = generator(x)
@@ -75,14 +77,13 @@ def train():
             optim_g.zero_grad()
             loss_mel = F.l1_loss(y_mel, y_audio_pred_mel)
 
-
             y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = mpd(y, y_audio_pred)
             y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = msd(y, y_audio_pred)
             loss_fm_f = feature_matching_loss(fmap_f_r, fmap_f_g)
             loss_fm_s = feature_matching_loss(fmap_s_r, fmap_s_g)
             loss_gen_f, losses_gen_f = generator_loss(y_df_hat_g)
             loss_gen_s, losses_gen_s = generator_loss(y_ds_hat_g)
-            loss_generator =   45 * loss_mel + loss_gen_s + loss_gen_f +loss_fm_s + loss_fm_f
+            loss_generator = 45 * loss_mel + loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f
             wandb.log({"loss generator": loss_generator,
                        "loss discriminator:": loss_discriminator,
                        "Mel-Spectrogram Loss in TRAIN": loss_mel})
@@ -104,13 +105,19 @@ def train():
                 prim = generator(ex)
 
                 wandb.log({
-                    "Audio valid every n step": [wandb.Audio(y_audio_pred.squeeze(1)[0].cpu().detach().numpy(), caption="Audio in train", sample_rate=22050)],
-                    "Audio in train ground true": [wandb.Audio(y.squeeze(1)[0].cpu().detach().numpy(), caption="Audio in train ground true", sample_rate=22050)],
-                    "Example of audio": [wandb.Audio(prim.squeeze().cpu().detach().numpy(), caption="Example of audio", sample_rate=22050)],
-                    "Spec train ": [wandb.Image(plt.imshow(y_audio_pred_mel.squeeze()[0].cpu().detach().numpy()), caption="Spec train ")],
-                    "Spec train GroundTrue": [wandb.Image(plt.imshow(y_mel.squeeze()[0].cpu().detach().numpy()), caption="Spec train GroundTrue")]
+                    "Audio valid every n step": [
+                        wandb.Audio(y_audio_pred.squeeze(1)[0].cpu().detach().numpy(), caption="Audio in train",
+                                    sample_rate=22050)],
+                    "Audio in train ground true": [
+                        wandb.Audio(y.squeeze(1)[0].cpu().detach().numpy(), caption="Audio in train ground true",
+                                    sample_rate=22050)],
+                    "Example of audio": [wandb.Audio(prim.squeeze().cpu().detach().numpy(), caption="Example of audio",
+                                                     sample_rate=22050)],
+                    "Spec train ": [wandb.Image(plt.imshow(y_audio_pred_mel.squeeze()[0].cpu().detach().numpy()),
+                                                caption="Spec train ")],
+                    "Spec train GroundTrue": [wandb.Image(plt.imshow(y_mel.squeeze()[0].cpu().detach().numpy()),
+                                                          caption="Spec train GroundTrue")]
                 })
-
 
         generator.eval()
         val_err_tot = 0
@@ -125,13 +132,14 @@ def train():
                     display.display(display.Audio(y_audio_pred.squeeze(1)[0].cpu().detach().numpy(), rate=22050))
                     display.display(display.Audio(y.squeeze(1)[0].cpu().detach().numpy(), rate=22050))
                 val_err_tot += F.l1_loss(y_mel, y_audio_pred_mel).item()
-            val_err = val_err_tot / (j+1)
+            val_err = val_err_tot / (j + 1)
             wandb.log({"Mel-Spectrogram Loss in VALIDATION": val_err})
             print("Mel-Spectrogram Loss in VALIDATION", val_err)
         generator.train()
         torch.save(generator.state_dict(), f'{path_gen_checkpoint}{epoch}.pt')
         torch.save(mpd.state_dict(), f'{path_mpd_checkpoint}{epoch}.pt')
         torch.save(msd.state_dict(), f'{path_msd_checkpoint}{epoch}.pt')
+
 
 if __name__ == '__main__':
     train()
